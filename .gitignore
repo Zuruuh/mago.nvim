@@ -1,0 +1,21 @@
+# Vim/Neovim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# macOS
+.DS_Store
+
+# Generated documentation tags
+doc/tags
+
+# Test files (if added later)
+/tests/
+
+# Editor directories
+.vscode/
+.idea/
+
+# Logs
+*.log
