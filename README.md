@@ -5,7 +5,12 @@ A Neovim plugin for [Mago](https://mago.carthage.software/), the blazing fast PH
 ## Features
 
 - **Format PHP files** with Mago's opinionated formatter
-- **Format on save** (optional)
+- **Lint PHP files** with Mago's powerful linter
+- **Native diagnostics** using Neovim's built-in diagnostic system
+- **LSP Code Actions** - Apply fixes via native `vim.lsp.buf.code_action()`
+- **Auto-fix** lint issues automatically
+- **Rule management** - list, explain, and filter linting rules
+- **Format/Lint on save** (optional)
 - **Format visual selections** or ranges
 - **Auto-detection** of Mago executable (project or global)
 
@@ -36,48 +41,103 @@ Default configuration:
 
 ```lua
 require('mago').setup({
-  format_on_save = false,     -- Auto-format on save
-  mago_path = nil,            -- Custom mago path (nil = auto-detect)
-  notify_on_error = true,     -- Show vim.notify on error
-  quickfix_on_error = true,   -- Populate quickfix on error
+  -- Formatter
+  format_on_save = false,          -- Auto-format on save
+
+  -- Linter
+  lint_on_save = false,            -- Auto-lint on save
+
+  -- LSP Integration
+  enable_lsp_code_actions = true,  -- Enable code actions integration
+
+  -- Shared
+  mago_path = nil,                 -- Custom mago path (nil = auto-detect)
+  notify_on_error = true,          -- Show vim.notify on error
+  quickfix_on_error = true,        -- Populate quickfix on error
 })
 ```
 
 ### Options
 
+#### Formatter
+
 - `format_on_save` (boolean): Automatically format PHP files when saving
+
+#### Linter
+
+- `lint_on_save` (boolean): Automatically lint PHP files when saving
+
+#### LSP Integration
+
+- `enable_lsp_code_actions` (boolean): Enable code actions integration (default: true)
+  - Provides "Fix all" and "Fix [RULE]" actions via `vim.lsp.buf.code_action()`
+  - Works with any code action UI (telescope, fzf-lua, native)
+
+#### Shared
+
 - `mago_path` (string|nil): Custom path to Mago executable. If `nil`, auto-detects from `vendor/bin/mago` or global `mago`
-- `notify_on_error` (boolean): Show notification when formatting fails
-- `quickfix_on_error` (boolean): Populate quickfix list with errors
+- `notify_on_error` (boolean): Show notification when operations fail
+- `quickfix_on_error` (boolean): Populate quickfix list with errors (formatter only)
 
 ## Usage
 
 ### Commands
 
+#### Formatting
+
 - `:MagoFormat` - Format the current buffer
 - `:MagoFormatRange` - Format a visual selection or range
-- `:MagoInfo` - Show Mago executable path and version
 - `:MagoToggleFormatOnSave` - Toggle format on save
+
+#### Linting
+
+- `:MagoLint` - Lint the current buffer
+- `:MagoLintFix` - Lint with auto-fix enabled
+- `:MagoLintOnly <rules>` - Lint with specific rules only (comma-separated)
+- `:MagoClearDiagnostics` - Clear linting diagnostics for current buffer
+- `:MagoToggleLintOnSave` - Toggle lint on save
+- `:MagoCodeAction` - Show Mago code actions at cursor (filters to Mago fixes only)
+
+#### Rule Management
+
+- `:MagoListRules` - Display all available linting rules
+- `:MagoExplainRule <rule>` - Show detailed explanation of a specific rule
+
+#### Information
+
+- `:MagoInfo` - Show Mago executable path, version, and status
 
 ### Keymaps
 
 Add to your `init.lua`:
 
 ```lua
--- Format current buffer
+-- Formatting
 vim.keymap.set('n', '<leader>mf', '<cmd>MagoFormat<cr>', { desc = 'Mago format' })
-
--- Format visual selection
 vim.keymap.set('v', '<leader>mf', '<cmd>MagoFormatRange<cr>', { desc = 'Mago format range' })
+
+-- Linting
+vim.keymap.set('n', '<leader>ml', '<cmd>MagoLint<cr>', { desc = 'Mago lint' })
+vim.keymap.set('n', '<leader>mF', '<cmd>MagoLintFix<cr>', { desc = 'Mago lint fix' })
+
+-- Code Actions
+vim.keymap.set('n', '<leader>ma', vim.lsp.buf.code_action, { desc = 'Code action' })
+
+-- Rule management
+vim.keymap.set('n', '<leader>mr', '<cmd>MagoListRules<cr>', { desc = 'Mago list rules' })
+
+-- Information
+vim.keymap.set('n', '<leader>mi', '<cmd>MagoInfo<cr>', { desc = 'Mago info' })
 ```
 
-### Format on Save
+### Auto-format and Auto-lint on Save
 
 Enable in your setup:
 
 ```lua
 require('mago').setup({
   format_on_save = true,
+  lint_on_save = true,
 })
 ```
 
@@ -85,12 +145,124 @@ Or toggle dynamically:
 
 ```vim
 :MagoToggleFormatOnSave
+:MagoToggleLintOnSave
 ```
 
 ### Visual Range Formatting
 
 1. Select lines in visual mode (`V`)
 2. Run `:MagoFormatRange` or use your keymap
+
+### Linting
+
+The linter uses Neovim's built-in diagnostic system to display issues with:
+
+- **Virtual text** - Inline error messages
+- **Signs** - Icons in the gutter
+- **Underlines** - Highlighting problematic code
+
+#### Lint Current Buffer
+
+```vim
+:MagoLint
+```
+
+#### Auto-fix Issues
+
+```vim
+:MagoLintFix
+```
+
+This will automatically fix issues that Mago can resolve, reload the buffer, and re-lint to show remaining issues.
+
+#### Lint with Specific Rules
+
+```vim
+:MagoLintOnly rule1,rule2,rule3
+```
+
+#### View and Explain Rules
+
+```vim
+:MagoListRules                    " List all available rules
+:MagoExplainRule <rule_code>      " Show detailed explanation
+```
+
+### Code Actions
+
+Mago.nvim integrates with Neovim's native LSP code action system, allowing you to apply fixes through the standard `vim.lsp.buf.code_action()` interface.
+
+#### Triggering Code Actions
+
+Position your cursor on a line with a diagnostic and run:
+
+```vim
+:lua vim.lsp.buf.code_action()
+```
+
+Or use your configured keybinding (e.g., `<leader>ca` or `<leader>ma`).
+
+#### Available Actions
+
+When triggered on a PHP file with mago diagnostics, you'll see:
+
+1. **Fix [RULE_CODE]: description** - Fix the specific diagnostic at cursor position
+   - Runs `mago lint --fix --only {rule_code}` for targeted fixes
+   - Only appears for diagnostics with rule codes
+
+2. **Fix all issues at cursor (N rules)** - Fix all diagnostics at cursor position
+   - Runs `mago lint --fix --only rule1,rule2,rule3`
+   - Only appears when cursor has multiple different rule violations
+   - Uses mago's comma-separated --only syntax
+
+3. **Fix all errors/warnings/info/hints (N issues, M rules)** - Fix by severity level
+   - Runs `mago lint --fix --only rule1,rule2,...` for all rules at that severity
+   - Groups diagnostics by severity (Error, Warning, Info, Hint)
+   - Useful for addressing high-priority issues first
+
+4. **Fix all issues with Mago (N issues)** - Fix all linting issues in the file
+   - Runs `mago lint --fix` on the entire file
+   - Always available when diagnostics exist
+
+**Example code action menu:**
+
+```
+Available code actions:
+  1. Fix [no-unused-variable]: Remove unused variable $foo
+  2. Fix [no-empty]: Remove empty block
+  3. Fix all issues at cursor (2 rules)
+  4. Fix all errors (5 issues, 3 rules)
+  5. Fix all warnings (2 issues, 1 rule)
+  6. Fix all issues with Mago (7 issues)
+```
+
+#### Integration with Code Action UIs
+
+Mago code actions work seamlessly with:
+
+- Native `vim.ui.select`
+- [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) with `telescope-ui-select`
+- [fzf-lua](https://github.com/ibhagwan/fzf-lua)
+- [dressing.nvim](https://github.com/stevearc/dressing.nvim)
+- Any other code action UI plugin
+
+#### Filter to Mago Actions Only
+
+Use the `:MagoCodeAction` command to show only Mago fixes:
+
+```vim
+:MagoCodeAction
+```
+
+#### Disable Code Actions
+
+To disable code actions integration:
+
+```lua
+require('mago').setup({
+  enable_lsp_code_actions = false,
+})
+```
 
 ## Integration with Other Plugins
 
@@ -148,8 +320,7 @@ Run `:MagoInfo` to check if Mago is detected. If not:
 
 Future features planned:
 
-- Async formatting
-- Linter integration
+- Async formatting and linting
 - Static analyzer integration
 - Architectural guard integration
 
