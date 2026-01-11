@@ -1,10 +1,7 @@
-local M = {}
-
 local function create_server()
   local server = {}
   local linter = require 'mago.linter'
   local formatter = require 'mago.formatter'
-
   local closing = false
 
   function server.request(m, p, c)
@@ -81,6 +78,8 @@ local function create_server()
 
   return server
 end
+
+local M = {}
 
 M.setup = function()
   local client = vim.lsp.start {
