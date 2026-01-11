@@ -1,7 +1,6 @@
 -- :MagoInfo - Show plugin and Mago information
 vim.api.nvim_create_user_command('MagoInfo', function()
   local exe = require 'mago.executable'
-  local config = require('mago.config').get()
   local path = exe.find()
 
   if path then
@@ -9,12 +8,6 @@ vim.api.nvim_create_user_command('MagoInfo', function()
     print '=== Mago.nvim Info ==='
     print('Mago path: ' .. path)
     print('Version: ' .. (version or 'unknown'))
-    print ''
-    print '--- Formatter ---'
-    print('Format on save: ' .. tostring(config.format_on_save))
-    print ''
-    print '--- Linter ---'
-    print('Lint on save: ' .. tostring(config.lint_on_save))
 
     -- Show diagnostic count for current buffer
     local ns = require('mago.linter').get_namespace()
@@ -36,7 +29,7 @@ vim.api.nvim_create_user_command('MagoFormat', function() require('mago.formatte
   desc = 'Format current buffer with Mago',
 })
 
--- :MagoFixLintErrors - Fix linting errors in the current buffer
-vim.api.nvim_create_user_command('MagoFixLintErrors', function() require('mago.linter').fix_lint_errors(0) end, {
-  desc = 'Fix linting errors in the current buffer with Mago',
+-- :MagoFixAll - Fix all linting errors in the current buffer
+vim.api.nvim_create_user_command('MagoFixAll', function() require('mago.linter').fix_all(0) end, {
+  desc = 'Fix all linting errors in the current buffer with Mago',
 })

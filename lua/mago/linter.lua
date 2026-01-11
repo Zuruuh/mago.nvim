@@ -176,6 +176,83 @@ local M = {}
 
 function M.get_namespace() return ns end
 
+-- Get unique rule codes from buffer diagnostics
+-- @param bufnr number: Buffer number
+-- @return table: Array of unique rule codes in order of appearance
+function M.get_unique_rules(bufnr)
+  bufnr = normalize_bufnr(bufnr)
+  local diagnostics = vim.diagnostic.get(bufnr, { namespace = ns })
+  local rules = {}
+  local seen = {}
+  
+  for _, diag in ipairs(diagnostics) do
+    if diag.code and not seen[diag.code] then
+      table.insert(rules, diag.code)
+      seen[diag.code] = true
+    end
+  end
+  
+  return rules
+end
+
+-- Get rule code at specific position (for cursor-based ordering)
+-- @param bufnr number: Buffer number
+-- @param line number: Line number (0-indexed, LSP format)
+-- @param col number: Column number (0-indexed, LSP format)
+-- @return string|nil: Rule code at position or nil
+function M.get_rule_at_position(bufnr, line, col)
+  bufnr = normalize_bufnr(bufnr)
+  local diagnostics = vim.diagnostic.get(bufnr, { namespace = ns })
+  
+  for _, diag in ipairs(diagnostics) do
+    if diag.lnum == line and diag.col <= col and (diag.end_col == -1 or col <= diag.end_col) then
+      return diag.code
+    end
+  end
+  
+  return nil
+end
+
+-- Fix all instances of a specific rule in the buffer
+-- @param bufnr number: Buffer number
+-- @param rule_code string: Rule code to fix (e.g., "no-empty")
+-- @return boolean: true if fix succeeded, false otherwise
+function M.fix_rule(bufnr, rule_code)
+  bufnr = normalize_bufnr(bufnr)
+  
+  if not validate_php_buffer(bufnr) then return false end
+  
+  local filepath = validate_saved_filepath(bufnr)
+  if not filepath then return false end
+  
+  local mago_path = get_mago_executable()
+  if not mago_path then return false end
+  
+  local cmd = { mago_path, 'lint', '--only', rule_code, '--fix', filepath }
+  local result = vim.system(cmd, { text = true }):wait()
+  
+  if result.code == 0 or (result.code == 1 and result.stdout) then
+    reload_buffer(bufnr)
+    M.clear_linting(bufnr)
+    
+    -- Format the buffer after fixing
+    require('mago.formatter').format_buffer(bufnr)
+    
+    vim.notify(
+      string.format('[mago.nvim] Applied auto-fixes for [%s], re-linting...', rule_code),
+      vim.log.levels.INFO
+    )
+    vim.defer_fn(function() M.lint(bufnr) end, 100)
+    return true
+  end
+  
+  vim.notify(
+    string.format('[mago.nvim] Failed to fix rule [%s]: %s', rule_code, result.stderr or 'Unknown error'),
+    vim.log.levels.ERROR
+  )
+  return false
+end
+
 function M.parse_diagnostics(json_output, bufnr)
   local data = parse_json_output(json_output)
   if not data then return nil end
@@ -217,7 +294,7 @@ function M.lint(bufnr)
   return handle_lint_error(result)
 end
 
-function M.fix_errors(bufnr)
+function M.fix_all(bufnr)
   bufnr = normalize_bufnr(bufnr)
 
   if not validate_php_buffer(bufnr) then return false end
@@ -232,7 +309,14 @@ function M.fix_errors(bufnr)
   local result = vim.system(cmd, { text = true }):wait()
 
   if result.code == 0 or (result.code == 1 and result.stdout) then
-    apply_fixes_and_relint(bufnr, M)
+    reload_buffer(bufnr)
+    M.clear_linting(bufnr)
+    
+    -- Format the buffer after fixing
+    require('mago.formatter').format_buffer(bufnr)
+    
+    vim.notify('[mago.nvim] Applied auto-fixes for all rules, re-linting...', vim.log.levels.INFO)
+    vim.defer_fn(function() M.lint(bufnr) end, 100)
     return true
   end
 
