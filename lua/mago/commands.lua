@@ -36,25 +36,7 @@ vim.api.nvim_create_user_command('MagoFormat', function() require('mago.formatte
   desc = 'Format current buffer with Mago',
 })
 
--- :MagoListRules - List available linting rules
-vim.api.nvim_create_user_command('MagoListRules', function() require('mago.rules').list_rules() end, {
-  desc = 'List available Mago linting rules',
-})
-
 -- :MagoFixLintErrors - Fix linting errors in the current buffer
 vim.api.nvim_create_user_command('MagoFixLintErrors', function() require('mago.linter').fix_lint_errors(0) end, {
   desc = 'Fix linting errors in the current buffer with Mago',
-})
-
--- :MagoExplainRule - Explain a specific rule
-vim.api.nvim_create_user_command('MagoExplainRule', function(opts)
-  local rule_code = opts.args
-  if rule_code == '' then
-    vim.notify('[mago.nvim] Usage: :MagoExplainRule <RULE_CODE>', vim.log.levels.WARN)
-    return
-  end
-  require('mago.rules').explain_rule(rule_code)
-end, {
-  nargs = 1,
-  desc = 'Explain a specific Mago linting rule',
 })

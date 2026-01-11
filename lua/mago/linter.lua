@@ -167,7 +167,7 @@ end
 
 local function apply_fixes_and_relint(bufnr, M)
   reload_buffer(bufnr)
-  M.clear_diagnostics(bufnr)
+  M.clear_linting(bufnr)
   vim.notify('[mago.nvim] Applied auto-fixes, re-linting...', vim.log.levels.INFO)
   vim.defer_fn(function() M.lint_buffer(bufnr) end, 100)
 end
@@ -216,8 +216,6 @@ function M.lint(bufnr)
 
   return handle_lint_error(result)
 end
-
-function M.clear_diagnostics(bufnr) vim.diagnostic.reset(ns, normalize_bufnr(bufnr)) end
 
 function M.fix_errors(bufnr)
   bufnr = normalize_bufnr(bufnr)
