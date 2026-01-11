@@ -12,9 +12,9 @@ PHP toolchain written in Rust.
 
 - [x] Formatter (on save from LSP or :MagoFormat)
 - [x] Linter (show diagnostics on file save)
-- [ ] Fix with Diagnostics with Code Actions
+- [x] Fix diagnostics with Code Actions
+- [ ] Explain Rule with Code Actions
 - [ ] Analyzer
-- [ ] Explain Rule, with Code Actions
 
 ## Requirements
 
@@ -45,6 +45,7 @@ PHP toolchain written in Rust.
 
 #### Linter
 
+- `:MagoFixAll` - Fix all linting errors in the current buffer
 - `:MagoExplainRule <rule>` - Show detailed explanation of a specific rule
 
 #### Information
