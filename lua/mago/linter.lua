@@ -228,15 +228,12 @@ function M.fix_rule(bufnr, rule_code)
   local mago_path = get_mago_executable()
   if not mago_path then return false end
   
-  local cmd = { mago_path, 'lint', '--only', rule_code, '--fix', filepath }
+  local cmd = { mago_path, 'lint', '--only', rule_code, '--fix', '--format-after-fix', filepath }
   local result = vim.system(cmd, { text = true }):wait()
   
   if result.code == 0 or (result.code == 1 and result.stdout) then
     reload_buffer(bufnr)
     M.clear_linting(bufnr)
-    
-    -- Format the buffer after fixing
-    require('mago.formatter').format_buffer(bufnr)
     
     vim.notify(
       string.format('[mago.nvim] Applied auto-fixes for [%s], re-linting...', rule_code),
@@ -305,15 +302,12 @@ function M.fix_all(bufnr)
   local mago_path = get_mago_executable()
   if not mago_path then return false end
 
-  local cmd = { mago_path, 'lint', '--fix', filepath }
+  local cmd = { mago_path, 'lint', '--fix', '--format-after-fix', filepath }
   local result = vim.system(cmd, { text = true }):wait()
 
   if result.code == 0 or (result.code == 1 and result.stdout) then
     reload_buffer(bufnr)
     M.clear_linting(bufnr)
-    
-    -- Format the buffer after fixing
-    require('mago.formatter').format_buffer(bufnr)
     
     vim.notify('[mago.nvim] Applied auto-fixes for all rules, re-linting...', vim.log.levels.INFO)
     vim.defer_fn(function() M.lint(bufnr) end, 100)
