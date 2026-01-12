@@ -1,14 +1,8 @@
 local M = {}
 
--- Parse a single error line
--- Expected format variations:
---   file.php:15:3: error message
---   Error: error message
--- Returns: { filename, lnum, col, text } or nil
 function M.parse_error(error_line)
   if not error_line or error_line == '' then return nil end
 
-  -- Try to parse file:line:col: message format
   local filename, lnum, col, text = error_line:match '^(.-)%:(%d+)%:(%d+)%:%s*(.*)$'
   if filename and lnum and col and text then
     return {
@@ -19,7 +13,6 @@ function M.parse_error(error_line)
     }
   end
 
-  -- Try to parse file:line: message format (no column)
   filename, lnum, text = error_line:match '^(.-)%:(%d+)%:%s*(.*)$'
   if filename and lnum and text then
     return {
@@ -30,7 +23,6 @@ function M.parse_error(error_line)
     }
   end
 
-  -- Generic error without location info
   return {
     filename = '',
     lnum = 1,
@@ -39,25 +31,20 @@ function M.parse_error(error_line)
   }
 end
 
--- Handle errors from mago
--- Displays notification and populates quickfix list
 function M.handle(stderr, bufnr)
   if not stderr or stderr == '' then stderr = 'Unknown error occurred' end
 
-  -- Show notification
   local lines = vim.split(stderr, '\n', { plain = true })
   local first_line = lines[1] or 'Formatting failed'
 
   vim.notify(string.format('[mago.nvim] %s', first_line), vim.log.levels.ERROR)
 
-  -- Populate quickfix list
   local qf_entries = {}
   local lines = vim.split(stderr, '\n', { plain = true })
 
   for _, line in ipairs(lines) do
     local entry = M.parse_error(line)
     if entry and entry.text ~= '' then
-      -- If no filename, use current buffer
       if entry.filename == '' and bufnr then entry.bufnr = bufnr end
       table.insert(qf_entries, entry)
     end

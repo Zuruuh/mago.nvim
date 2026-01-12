@@ -176,9 +176,6 @@ local M = {}
 
 function M.get_namespace() return ns end
 
--- Get unique rule codes from buffer diagnostics
--- @param bufnr number: Buffer number
--- @return table: Array of unique rule codes in order of appearance
 function M.get_unique_rules(bufnr)
   bufnr = normalize_bufnr(bufnr)
   local diagnostics = vim.diagnostic.get(bufnr, { namespace = ns })
@@ -195,11 +192,6 @@ function M.get_unique_rules(bufnr)
   return rules
 end
 
--- Get rule code at specific position (for cursor-based ordering)
--- @param bufnr number: Buffer number
--- @param line number: Line number (0-indexed, LSP format)
--- @param col number: Column number (0-indexed, LSP format)
--- @return string|nil: Rule code at position or nil
 function M.get_rule_at_position(bufnr, line, col)
   bufnr = normalize_bufnr(bufnr)
   local diagnostics = vim.diagnostic.get(bufnr, { namespace = ns })
@@ -211,10 +203,6 @@ function M.get_rule_at_position(bufnr, line, col)
   return nil
 end
 
--- Fix all instances of a specific rule in the buffer
--- @param bufnr number: Buffer number
--- @param rule_code string: Rule code to fix (e.g., "no-empty")
--- @return boolean: true if fix succeeded, false otherwise
 function M.fix_rule(bufnr, rule_code)
   bufnr = normalize_bufnr(bufnr)
 
@@ -313,15 +301,10 @@ function M.fix_all(bufnr)
   return false
 end
 
--- Get rule code on a specific line (ignores column position)
--- @param bufnr number: Buffer number
--- @param line number: Line number (0-indexed, LSP format)
--- @return string|nil: Rule code on line or nil
 function M.get_rule_on_line(bufnr, line)
   bufnr = normalize_bufnr(bufnr)
   local diagnostics = vim.diagnostic.get(bufnr, { namespace = ns })
 
-  -- Find the first diagnostic on the specified line
   for _, diag in ipairs(diagnostics) do
     if diag.lnum == line and diag.code then return diag.code end
   end
@@ -329,20 +312,14 @@ function M.get_rule_on_line(bufnr, line)
   return nil
 end
 
--- Get rule code at cursor position (from current line)
--- @param bufnr number: Buffer number
--- @return string|nil: Rule code at cursor position or nil
 function M.get_rule_at_cursor(bufnr)
   bufnr = normalize_bufnr(bufnr)
   local cursor = vim.api.nvim_win_get_cursor(0)
-  local line = cursor[1] - 1 -- Convert to 0-indexed
+  local line = cursor[1] - 1
 
   return M.get_rule_on_line(bufnr, line)
 end
 
--- Explain a specific linter rule
--- @param rule_code string: Rule code to explain (e.g., "no-empty")
--- @return string|nil: Rule explanation or nil on error
 function M.explain_rule(rule_code)
   if not rule_code or rule_code == '' then
     vim.notify('[mago.nvim] No rule code provided', vim.log.levels.ERROR)
@@ -366,31 +343,23 @@ function M.explain_rule(rule_code)
   end
 end
 
--- Show rule explanation in a floating window
--- @param rule_code string: Rule code to explain
--- @return boolean: true if shown, false on error
 function M.show_rule_explanation(rule_code)
   local explanation = M.explain_rule(rule_code)
   if not explanation then return false end
 
-  -- Create buffer for explanation
   local buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_option(buf, 'bufhidden', 'wipe')
   vim.api.nvim_buf_set_option(buf, 'filetype', 'text')
 
-  -- Split explanation into lines
   local lines = vim.split(explanation, '\n', { plain = true })
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
 
-  -- Calculate window size
   local width = math.min(80, vim.o.columns - 4)
   local height = math.min(#lines + 2, vim.o.lines - 4)
 
-  -- Center the window
   local row = math.floor((vim.o.lines - height) / 2)
   local col = math.floor((vim.o.columns - width) / 2)
 
-  -- Create floating window
   local win_opts = {
     relative = 'editor',
     width = width,
@@ -405,11 +374,9 @@ function M.show_rule_explanation(rule_code)
 
   local win = vim.api.nvim_open_win(buf, true, win_opts)
 
-  -- Set buffer options
   vim.api.nvim_buf_set_option(buf, 'modifiable', false)
   vim.api.nvim_buf_set_option(buf, 'readonly', true)
 
-  -- Set up keymaps to close the window
   local close_cmd = '<Cmd>close<CR>'
   vim.api.nvim_buf_set_keymap(buf, 'n', 'q', close_cmd, { noremap = true, silent = true })
   vim.api.nvim_buf_set_keymap(buf, 'n', '<Esc>', close_cmd, { noremap = true, silent = true })
