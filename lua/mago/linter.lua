@@ -184,14 +184,14 @@ function M.get_unique_rules(bufnr)
   local diagnostics = vim.diagnostic.get(bufnr, { namespace = ns })
   local rules = {}
   local seen = {}
-  
+
   for _, diag in ipairs(diagnostics) do
     if diag.code and not seen[diag.code] then
       table.insert(rules, diag.code)
       seen[diag.code] = true
     end
   end
-  
+
   return rules
 end
 
@@ -203,13 +203,11 @@ end
 function M.get_rule_at_position(bufnr, line, col)
   bufnr = normalize_bufnr(bufnr)
   local diagnostics = vim.diagnostic.get(bufnr, { namespace = ns })
-  
+
   for _, diag in ipairs(diagnostics) do
-    if diag.lnum == line and diag.col <= col and (diag.end_col == -1 or col <= diag.end_col) then
-      return diag.code
-    end
+    if diag.lnum == line and diag.col <= col and (diag.end_col == -1 or col <= diag.end_col) then return diag.code end
   end
-  
+
   return nil
 end
 
@@ -219,30 +217,27 @@ end
 -- @return boolean: true if fix succeeded, false otherwise
 function M.fix_rule(bufnr, rule_code)
   bufnr = normalize_bufnr(bufnr)
-  
+
   if not validate_php_buffer(bufnr) then return false end
-  
+
   local filepath = validate_saved_filepath(bufnr)
   if not filepath then return false end
-  
+
   local mago_path = get_mago_executable()
   if not mago_path then return false end
-  
+
   local cmd = { mago_path, 'lint', '--only', rule_code, '--fix', '--format-after-fix', filepath }
   local result = vim.system(cmd, { text = true }):wait()
-  
+
   if result.code == 0 or (result.code == 1 and result.stdout) then
     reload_buffer(bufnr)
     M.clear_linting(bufnr)
-    
-    vim.notify(
-      string.format('[mago.nvim] Applied auto-fixes for [%s], re-linting...', rule_code),
-      vim.log.levels.INFO
-    )
+
+    vim.notify(string.format('[mago.nvim] Applied auto-fixes for [%s], re-linting...', rule_code), vim.log.levels.INFO)
     vim.defer_fn(function() M.lint(bufnr) end, 100)
     return true
   end
-  
+
   vim.notify(
     string.format('[mago.nvim] Failed to fix rule [%s]: %s', rule_code, result.stderr or 'Unknown error'),
     vim.log.levels.ERROR
@@ -308,7 +303,7 @@ function M.fix_all(bufnr)
   if result.code == 0 or (result.code == 1 and result.stdout) then
     reload_buffer(bufnr)
     M.clear_linting(bufnr)
-    
+
     vim.notify('[mago.nvim] Applied auto-fixes for all rules, re-linting...', vim.log.levels.INFO)
     vim.defer_fn(function() M.lint(bufnr) end, 100)
     return true
@@ -318,25 +313,31 @@ function M.fix_all(bufnr)
   return false
 end
 
+-- Get rule code on a specific line (ignores column position)
+-- @param bufnr number: Buffer number
+-- @param line number: Line number (0-indexed, LSP format)
+-- @return string|nil: Rule code on line or nil
+function M.get_rule_on_line(bufnr, line)
+  bufnr = normalize_bufnr(bufnr)
+  local diagnostics = vim.diagnostic.get(bufnr, { namespace = ns })
+
+  -- Find the first diagnostic on the specified line
+  for _, diag in ipairs(diagnostics) do
+    if diag.lnum == line and diag.code then return diag.code end
+  end
+
+  return nil
+end
+
 -- Get rule code at cursor position (from current line)
 -- @param bufnr number: Buffer number
 -- @return string|nil: Rule code at cursor position or nil
 function M.get_rule_at_cursor(bufnr)
   bufnr = normalize_bufnr(bufnr)
   local cursor = vim.api.nvim_win_get_cursor(0)
-  local line = cursor[1] - 1  -- Convert to 0-indexed
-  
-  -- Get all diagnostics for the buffer
-  local diagnostics = vim.diagnostic.get(bufnr, { namespace = ns })
-  
-  -- Find the first diagnostic on the current line
-  for _, diag in ipairs(diagnostics) do
-    if diag.lnum == line and diag.code then
-      return diag.code
-    end
-  end
-  
-  return nil
+  local line = cursor[1] - 1 -- Convert to 0-indexed
+
+  return M.get_rule_on_line(bufnr, line)
 end
 
 -- Explain a specific linter rule
@@ -347,13 +348,13 @@ function M.explain_rule(rule_code)
     vim.notify('[mago.nvim] No rule code provided', vim.log.levels.ERROR)
     return nil
   end
-  
+
   local mago_path = get_mago_executable()
   if not mago_path then return nil end
-  
+
   local cmd = { mago_path, 'lint', '--explain', rule_code }
   local result = vim.system(cmd, { text = true }):wait()
-  
+
   if result.code == 0 and result.stdout then
     return result.stdout
   else
@@ -371,24 +372,24 @@ end
 function M.show_rule_explanation(rule_code)
   local explanation = M.explain_rule(rule_code)
   if not explanation then return false end
-  
+
   -- Create buffer for explanation
   local buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_option(buf, 'bufhidden', 'wipe')
   vim.api.nvim_buf_set_option(buf, 'filetype', 'text')
-  
+
   -- Split explanation into lines
   local lines = vim.split(explanation, '\n', { plain = true })
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-  
+
   -- Calculate window size
   local width = math.min(80, vim.o.columns - 4)
   local height = math.min(#lines + 2, vim.o.lines - 4)
-  
+
   -- Center the window
   local row = math.floor((vim.o.lines - height) / 2)
   local col = math.floor((vim.o.columns - width) / 2)
-  
+
   -- Create floating window
   local win_opts = {
     relative = 'editor',
@@ -401,18 +402,18 @@ function M.show_rule_explanation(rule_code)
     title = string.format(' Mago Rule: %s ', rule_code),
     title_pos = 'center',
   }
-  
+
   local win = vim.api.nvim_open_win(buf, true, win_opts)
-  
+
   -- Set buffer options
   vim.api.nvim_buf_set_option(buf, 'modifiable', false)
   vim.api.nvim_buf_set_option(buf, 'readonly', true)
-  
+
   -- Set up keymaps to close the window
   local close_cmd = '<Cmd>close<CR>'
   vim.api.nvim_buf_set_keymap(buf, 'n', 'q', close_cmd, { noremap = true, silent = true })
   vim.api.nvim_buf_set_keymap(buf, 'n', '<Esc>', close_cmd, { noremap = true, silent = true })
-  
+
   return true
 end
 

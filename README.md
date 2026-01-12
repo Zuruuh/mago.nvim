@@ -13,7 +13,7 @@ PHP toolchain written in Rust.
 - [x] Formatter (on save from LSP or :MagoFormat)
 - [x] Linter (show diagnostics on file save)
 - [x] Fix diagnostics with Code Actions
-- [ ] Explain Rule with Code Actions
+- [x] Explain Rule with Code Actions
 - [ ] Analyzer
 
 ## Requirements
