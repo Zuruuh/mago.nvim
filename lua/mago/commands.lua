@@ -1,24 +1,6 @@
--- Define user commands for mago.nvim
-
--- :MagoFormat - Format entire buffer
-vim.api.nvim_create_user_command('MagoFormat', function()
-  require('mago.formatter').format_buffer(0)
-end, {
-  desc = 'Format current buffer with Mago',
-})
-
--- :MagoFormatRange - Format visual selection or range
-vim.api.nvim_create_user_command('MagoFormatRange', function(opts)
-  require('mago.formatter').format_range(0, opts.line1, opts.line2)
-end, {
-  range = true,
-  desc = 'Format selected range with Mago',
-})
-
 -- :MagoInfo - Show plugin and Mago information
 vim.api.nvim_create_user_command('MagoInfo', function()
   local exe = require 'mago.executable'
-  local config = require('mago.config').get()
   local path = exe.find()
 
   if path then
@@ -26,12 +8,6 @@ vim.api.nvim_create_user_command('MagoInfo', function()
     print '=== Mago.nvim Info ==='
     print('Mago path: ' .. path)
     print('Version: ' .. (version or 'unknown'))
-    print ''
-    print '--- Formatter ---'
-    print('Format on save: ' .. tostring(config.format_on_save))
-    print ''
-    print '--- Linter ---'
-    print('Lint on save: ' .. tostring(config.lint_on_save))
 
     -- Show diagnostic count for current buffer
     local ns = require('mago.linter').get_namespace()
@@ -48,86 +24,38 @@ end, {
   desc = 'Show Mago information',
 })
 
--- :MagoToggleFormatOnSave - Toggle format on save
-vim.api.nvim_create_user_command('MagoToggleFormatOnSave', function()
-  require('mago').toggle_format_on_save()
-end, {
-  desc = 'Toggle Mago format on save',
+-- :MagoFormat - Format entire buffer
+vim.api.nvim_create_user_command('MagoFormat', function() require('mago.formatter').format_buffer(0) end, {
+  desc = 'Format current buffer with Mago',
 })
 
--- Linter commands
-
--- :MagoLint - Lint current buffer
-vim.api.nvim_create_user_command('MagoLint', function()
-  require('mago.linter').lint_buffer(0)
-end, {
-  desc = 'Lint current buffer with Mago',
+-- :MagoFixAll - Fix all linting errors in the current buffer
+vim.api.nvim_create_user_command('MagoFixAll', function() require('mago.linter').fix_all(0) end, {
+  desc = 'Fix all linting errors in the current buffer with Mago',
 })
 
--- :MagoLintFix - Lint with auto-fix
-vim.api.nvim_create_user_command('MagoLintFix', function()
-  require('mago.linter').lint_fix(0)
-end, {
-  desc = 'Lint current buffer with auto-fix',
-})
-
--- :MagoClearDiagnostics - Clear linting diagnostics
-vim.api.nvim_create_user_command('MagoClearDiagnostics', function()
-  require('mago.linter').clear_diagnostics(0)
-  vim.notify('[mago.nvim] Cleared diagnostics', vim.log.levels.INFO)
-end, {
-  desc = 'Clear Mago linting diagnostics for current buffer',
-})
-
--- :MagoLintOnly - Lint with specific rules only
-vim.api.nvim_create_user_command('MagoLintOnly', function(opts)
-  local rules = vim.split(opts.args, ',', { plain = true, trimempty = true })
-
-  -- Trim whitespace from each rule
-  for i, rule in ipairs(rules) do
-    rules[i] = vim.trim(rule)
-  end
-
-  require('mago.linter').lint_only(0, rules)
-end, {
-  nargs = '+',
-  desc = 'Lint with specific rules only (comma-separated)',
-})
-
--- :MagoListRules - List available linting rules
-vim.api.nvim_create_user_command('MagoListRules', function()
-  require('mago.rules').list_rules()
-end, {
-  desc = 'List available Mago linting rules',
-})
-
--- :MagoExplainRule - Explain a specific rule
+-- :MagoExplainRule [rule] - Show detailed explanation of a linter rule
 vim.api.nvim_create_user_command('MagoExplainRule', function(opts)
+  local linter = require 'mago.linter'
   local rule_code = opts.args
+  
+  -- If no argument provided, try to get rule from cursor position
   if rule_code == '' then
-    vim.notify('[mago.nvim] Usage: :MagoExplainRule <RULE_CODE>', vim.log.levels.WARN)
-    return
+    local bufnr = vim.api.nvim_get_current_buf()
+    rule_code = linter.get_rule_at_cursor(bufnr)
+    
+    if not rule_code then
+      vim.notify(
+        '[mago.nvim] No diagnostic found at cursor. Specify rule by parameter (:MagoExplainRule <rule>) or place cursor on a diagnostic',
+        vim.log.levels.INFO
+      )
+      return
+    end
   end
-  require('mago.rules').explain_rule(rule_code)
+  
+  -- Show explanation in floating window
+  linter.show_rule_explanation(rule_code)
 end, {
-  nargs = 1,
-  desc = 'Explain a specific Mago linting rule',
-})
-
--- :MagoToggleLintOnSave - Toggle lint on save
-vim.api.nvim_create_user_command('MagoToggleLintOnSave', function()
-  require('mago').toggle_lint_on_save()
-end, {
-  desc = 'Toggle Mago lint on save',
-})
-
--- :MagoCodeAction - Show Mago code actions at cursor
-vim.api.nvim_create_user_command('MagoCodeAction', function()
-  vim.lsp.buf.code_action {
-    filter = function(action)
-      return action.title and action.title:match '^Fix.*Mago'
-    end,
-  }
-end, {
-  desc = 'Show Mago code actions at cursor',
+  nargs = '?',
+  desc = 'Explain a Mago linter rule (uses cursor diagnostic if no arg provided)',
 })
