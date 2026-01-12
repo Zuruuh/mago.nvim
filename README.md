@@ -46,7 +46,19 @@ PHP toolchain written in Rust.
 
 ## How It Works
 
-TODO: exaplain the fake LSP
+mago.nvim implements a "fake" LSP server that runs in-process within Neovim,
+rather than as a separate language server process. This design choice allows
+for tight integration with Neovim's APIs.
+
+The fake LSP server registers handlers for key LSP methods:
+
+- `textDocument/formatting` - Formats the buffer using Mago
+- `textDocument/codeAction` - Provides code actions for fixing and explaining rules
+- `initialize` - Announces basic LSP capabilities
+
+When you open a PHP file, mago.nvim automatically attaches this fake LSP
+client, enabling all the standard LSP features like code actions and formatting
+through Neovim's native LSP interface.
 
 ## Troubleshooting
 
