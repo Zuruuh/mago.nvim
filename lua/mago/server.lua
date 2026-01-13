@@ -7,6 +7,7 @@ local function create_server()
   function server.request(m, p, c)
     local methods = {
       ['initialize'] = function(_, callback)
+        vim.notify '[nvim.mago] LSP Attached'
         callback(nil, {
           capabilities = {
             codeActionProvider = true,
@@ -22,6 +23,7 @@ local function create_server()
       end,
 
       ['textDocument/codeAction'] = function(params, callback)
+        vim.notify 'Code Actions requested'
         local bufnr = vim.uri_to_bufnr(params.textDocument.uri)
         local actions = {}
 
@@ -106,8 +108,7 @@ local function create_server()
 
   function server.notify(m, p)
     local methods = {
-      ['textDocument/didOpen'] = function(params)
-        linter.lint(vim.uri_to_bufnr(params.textDocument.uri))
+      ['textDocument/didOpen'] = function()
         --
       end,
 

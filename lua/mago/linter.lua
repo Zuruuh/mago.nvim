@@ -165,13 +165,6 @@ local function reload_buffer(bufnr)
   vim.api.nvim_buf_call(bufnr, function() vim.cmd 'checktime' end)
 end
 
-local function apply_fixes_and_relint(bufnr, M)
-  reload_buffer(bufnr)
-  M.clear_linting(bufnr)
-  vim.notify('[mago.nvim] Applied auto-fixes, re-linting...', vim.log.levels.INFO)
-  vim.defer_fn(function() M.lint_buffer(bufnr) end, 100)
-end
-
 local M = {}
 
 function M.get_namespace() return ns end
