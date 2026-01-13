@@ -1,43 +1,34 @@
 local M = {}
 
-function M.find()
+M.mago_path = nil
+
+function M.init()
   local vendor_mago = vim.fn.findfile('vendor/bin/mago', '.;')
   if vendor_mago ~= '' then
     local full_path = vim.fn.fnamemodify(vendor_mago, ':p')
-    if vim.fn.executable(full_path) == 1 then return full_path end
+    if vim.fn.executable(full_path) == 1 then
+      M.mago_path = full_path
+      return true
+    end
   end
 
-  if vim.fn.executable 'mago' == 1 then return 'mago' end
+  if vim.fn.executable 'mago' == 1 then
+    M.mago_path = 'mago'
+    return true
+  end
 
-  return nil
+  return false
 end
 
-function M.get_or_error()
-  local mago_path = M.find()
+function M.run(parameters)
+  if M.mago_path == nil then M.init() end
 
-  if not mago_path then
-    vim.notify(
-      '[mago.nvim] Mago executable not found.\n'
-        .. 'Install it globally or via Composer in your project:\n'
-        .. '  composer require --dev carthage/mago',
-      vim.log.levels.ERROR
-    )
-    return nil
-  end
+  table.insert(parameters, 1, M.mago_path)
+  local result = vim.system(parameters, { text = true }):wait()
 
-  return mago_path
-end
+  if result.code == 0 and result.stdout then return result.stdout end
 
-function M.get_version(mago_path)
-  if not mago_path then return nil end
-
-  local result = vim.system({ mago_path, '--version' }, { text = true }):wait()
-
-  if result.code == 0 then
-    local version = result.stdout:match '[%d%.]+' or result.stdout:gsub('\n', '')
-    return version
-  end
-
+  vim.notify(string.format('[mago.nvim] Failed to run command: ' .. parameters[2], vim.log.levels.ERROR))
   return nil
 end
 

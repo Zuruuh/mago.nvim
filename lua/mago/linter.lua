@@ -125,7 +125,7 @@ local function process_issue_to_diagnostic(issue, bufnr, buf_filepath)
   return create_diagnostic_entry(bufnr, issue, location, message, rule_code, severity_str)
 end
 
-local function process_and_set_diagnostics(stdout, bufnr)
+local function process_diagnostics(stdout, bufnr)
   if not stdout or stdout == '' then return false end
 
   local data = parse_json_output(stdout)
@@ -140,7 +140,6 @@ local function process_and_set_diagnostics(stdout, bufnr)
     if diagnostic then table.insert(diagnostics, diagnostic) end
   end
 
-  vim.diagnostic.set(ns, bufnr, diagnostics, {})
   return diagnostics
 end
 
@@ -215,7 +214,10 @@ function M.fix_rule(bufnr, rule_code)
     M.clear_linting(bufnr)
 
     vim.notify(string.format('[mago.nvim] Applied auto-fixes for [%s], re-linting...', rule_code), vim.log.levels.INFO)
-    vim.defer_fn(function() M.lint(bufnr) end, 100)
+    vim.defer_fn(function()
+      local diagnostics = M.lint(bufnr)
+      if diagnostics then vim.diagnostic.set(ns, bufnr, diagnostics, {}) end
+    end, 100)
     return true
   end
 
@@ -247,24 +249,24 @@ function M.clear_linting(bufnr) vim.diagnostic.reset(ns, normalize_bufnr(bufnr))
 function M.lint(bufnr)
   bufnr = normalize_bufnr(bufnr)
 
-  if not validate_php_buffer(bufnr) then return false end
+  if not validate_php_buffer(bufnr) then return nil end
 
   local filepath = validate_saved_filepath(bufnr)
-  if not filepath then return false end
+  if not filepath then return nil end
 
   local mago_path = get_mago_executable()
-  if not mago_path then return false end
+  if not mago_path then return nil end
 
   local cmd = { mago_path, 'lint', '--reporting-format', 'json', filepath }
   local result = vim.system(cmd, { text = true }):wait()
 
-  local diagnostics = process_and_set_diagnostics(result.stdout, bufnr)
+  local diagnostics = process_diagnostics(result.stdout, bufnr)
   if diagnostics then
     notify_diagnostic_results(#diagnostics)
-    return true
+    return diagnostics
   end
 
-  return handle_lint_error(result)
+  return handle_lint_error(result) or nil
 end
 
 function M.fix_all(bufnr)
@@ -286,7 +288,10 @@ function M.fix_all(bufnr)
     M.clear_linting(bufnr)
 
     vim.notify('[mago.nvim] Applied auto-fixes for all rules, re-linting...', vim.log.levels.INFO)
-    vim.defer_fn(function() M.lint(bufnr) end, 100)
+    vim.defer_fn(function()
+      local diagnostics = M.lint(bufnr)
+      if diagnostics then vim.diagnostic.set(ns, bufnr, diagnostics, {}) end
+    end, 100)
     return true
   end
 
