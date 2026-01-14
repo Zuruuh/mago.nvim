@@ -31,9 +31,19 @@ local function convert_issue_to_diagnostic(issue)
   }
 end
 
-function M.get_diagnostics_from_mago_issues(issues)
+local function get_diagnostics_from_mago_issues(issues)
   local diagnostics = vim.tbl_map(convert_issue_to_diagnostic, issues or {})
   return diagnostics
+end
+
+function M.publish(uri, dispatchers)
+  local filepath = vim.uri_to_fname(uri)
+  local issues = require('mago.run.lint').check(filepath)
+
+  dispatchers.notification('textDocument/publishDiagnostics', {
+    uri = uri,
+    diagnostics = get_diagnostics_from_mago_issues(issues),
+  })
 end
 
 return M

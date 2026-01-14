@@ -1,4 +1,7 @@
 local function create_server(dispatchers)
+  local diagnostics = require 'mago.server.diagnostics'
+  local code_actions = require 'mago.run.code-actions'
+
   local server = {}
   local closing = false
 
@@ -20,25 +23,9 @@ local function create_server(dispatchers)
       end,
 
       ['textDocument/codeAction'] = function(params, callback)
-        vim.notify 'Code Actions requested'
         local bufnr = vim.uri_to_bufnr(params.textDocument.uri)
-        local actions = {}
 
-        if vim.bo[bufnr].filetype ~= 'php' then
-          callback(nil, actions)
-          return
-        end
-
-        table.insert(actions, {
-          title = 'Fix all Mago issues in file',
-          kind = 'quickfix',
-          command = {
-            title = 'Fix all Mago issues',
-            command = 'mago.fix_all',
-            arguments = { bufnr },
-          },
-        })
-
+        local actions = code_actions.retrieve_from_buffer(bufnr)
         callback(nil, actions)
       end,
 
@@ -58,31 +45,25 @@ local function create_server(dispatchers)
     c(nil, nil)
   end
 
-  local function refresh_diagnostics(uri)
-    local filepath = vim.uri_to_fname(uri)
-    local issues = require('mago.run.lint').check(filepath)
-
-    dispatchers.notification('textDocument/publishDiagnostics', {
-      uri = uri,
-      diagnostics = require('mago.server.diagnostics').get_diagnostics_from_mago_issues(issues),
-    })
-  end
-
   function server.notify(m, p)
     local methods = {
       ['textDocument/didOpen'] = function(params)
-        refresh_diagnostics(params.textDocument.uri)
+        diagnostics.publish(params.textDocument.uri, dispatchers)
         --
       end,
 
       ['textDocument/didSave'] = function(params)
-        refresh_diagnostics(params.textDocument.uri)
+        diagnostics.publish(params.textDocument.uri, dispatchers)
         --
       end,
 
-      ['textDocument/didChange'] = function(params) end,
+      ['textDocument/didChange'] = function(_)
+        --
+      end,
 
-      ['textDocument/didClose'] = function(_) end,
+      ['textDocument/didClose'] = function(_)
+        --
+      end,
     }
 
     local met = methods[m]
