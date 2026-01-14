@@ -6,7 +6,7 @@ end, {
 })
 
 vim.api.nvim_create_user_command('MagoLintFix', function()
-  require('mago.linter').fix_all(0)
+  require('mago-nivm.linter').fix_all(0)
   --
 end, {
   desc = 'Fix all linting errors in the current buffer with Mago',
@@ -20,7 +20,7 @@ vim.api.nvim_create_user_command('MagoExplainRule', function(opts)
     return
   end
 
-  require('mago.server.rules').popup_explain(rule)
+  require('mago-nvim.server.rules').popup_explain(rule)
 end, {
   nargs = '?',
   desc = 'Explain a Mago linter rule',

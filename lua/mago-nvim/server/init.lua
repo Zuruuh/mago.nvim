@@ -1,6 +1,6 @@
 local function create_server(dispatchers)
-  local diagnostics = require 'mago.server.diagnostics'
-  local code_actions = require 'mago.server.code-actions'
+  local diagnostics = require 'mago-nvim.server.diagnostics'
+  local code_actions = require 'mago-nvim.server.code-actions'
 
   local server = {}
   local closing = false
@@ -18,7 +18,7 @@ local function create_server(dispatchers)
       end,
 
       ['textDocument/formatting'] = function(params, callback)
-        require('mago.server.format').format_uri(params.textDocument.uri)
+        require('mago-nvim.server.format').format_uri(params.textDocument.uri)
         callback(nil, {})
       end,
 
@@ -108,18 +108,18 @@ M.setup = function()
 
   vim.lsp.commands['mago.explain_rule'] = function(command)
     local rule = command.arguments[1]
-    require('mago.server.rules').popup_explain(rule)
+    require('mago-nvim.server.rules').popup_explain(rule)
   end
 
   vim.lsp.commands['mago.fix_all'] = function(command)
     local bufnr = command.arguments[1]
-    require('mago.server.fixer').fix(bufnr)
+    require('mago-nvim.server.fixer').fix(bufnr)
   end
 
   vim.lsp.commands['mago.fix_rule'] = function(command)
     local bufnr = command.arguments[1]
     local rule = command.arguments[2]
-    require('mago.server.fixer').fix(bufnr, rule)
+    require('mago-nvim.server.fixer').fix(bufnr, rule)
   end
 end
 

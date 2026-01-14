@@ -1,6 +1,6 @@
 local M = {}
 
-local function mago() return require 'mago.executable' end
+local function mago() return require 'mago-nvim.executable' end
 
 function M.check(filepath)
   local output = mago().run { 'lint', '--reporting-format', 'json', filepath }

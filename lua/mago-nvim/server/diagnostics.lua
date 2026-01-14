@@ -38,7 +38,7 @@ end
 
 function M.publish(uri, dispatchers)
   local filepath = vim.uri_to_fname(uri)
-  local issues = require('mago.run.lint').check(filepath)
+  local issues = require('mago-nvim.run.lint').check(filepath)
 
   dispatchers.notification('textDocument/publishDiagnostics', {
     uri = uri,

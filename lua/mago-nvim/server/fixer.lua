@@ -1,7 +1,7 @@
 local M = {}
 
 function M.fix(bufnr, rule)
-  local lint = require 'mago.run.lint'
+  local lint = require 'mago-nvim.run.lint'
   local filepath = vim.api.nvim_buf_get_name(bufnr)
   print(rule)
 

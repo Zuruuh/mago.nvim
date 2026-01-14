@@ -1,7 +1,7 @@
 local M = {}
 
 function M.format_uri(uri)
-  local fmt = require 'mago.run.fmt'
+  local fmt = require 'mago-nvim.run.fmt'
   local bufnr = vim.uri_to_bufnr(uri)
   local filepath = vim.uri_to_fname(uri)
   local is_modified = vim.bo[bufnr].modified
