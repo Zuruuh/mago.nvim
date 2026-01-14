@@ -35,9 +35,15 @@ PHP toolchain written in Rust.
 ### Commands
 
 - `:MagoFormat` - Format the current buffer
-- `:MagoFixAll` - Fix all linting errors in the current buffer
-- `:MagoExplainRule [rule]` - Show detailed explanation of a linter rule (uses cursor diagnostic if no rule specified)
-- `:MagoInfo` - Show Mago executable path, version, and plugin status
+- `:MagoLintFix` - Fix all linting errors in the current buffer
+- `:MagoExplainRule [rule]` - Show detailed explanation of a linter rule
+
+## Troubleshooting
+
+### Mago executable not found
+
+- Install globally: Follow [Mago installation guide](https://mago.carthage.software/)
+- Install via Composer: `composer require --dev carthage/mago`
 
 ## How It Works
 
@@ -54,15 +60,6 @@ The fake LSP server registers handlers for key LSP methods:
 When you open a PHP file, mago.nvim automatically attaches this fake LSP
 client, enabling all the standard LSP features like code actions and formatting
 through Neovim's native LSP interface.
-
-## Troubleshooting
-
-### Mago executable not found
-
-Run `:MagoInfo` to check if Mago is detected. If not:
-
-- Install globally: Follow [Mago installation guide](https://mago.carthage.software/)
-- Install via Composer: `composer require --dev carthage/mago`
 
 ## Contributing
 
