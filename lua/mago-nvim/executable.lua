@@ -39,7 +39,6 @@ function M.run(cmd, opts)
   end
 
   vim.notify(string.format('[mago.nvim] Failed to run command: ' .. cmd[2], vim.log.levels.ERROR))
-  vim.log(result.stderr, vim.log.levels.ERROR, { title = 'mago.nvim' })
 
   return nil
 end
