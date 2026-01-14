@@ -43,7 +43,7 @@ function M.retrieve_from_buffer(bufnr)
       kind = 'quickfix',
       command = {
         title = string.format('Explain [%s] rule', item),
-        command = 'mago.fix_rule',
+        command = 'mago.explain_rule',
         arguments = { item },
       },
     })

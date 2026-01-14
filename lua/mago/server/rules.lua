@@ -1,0 +1,14 @@
+local M = {}
+
+function M.popup_explain(rule)
+  local output = require('mago.run.lint').explain(rule)
+
+  if output == nil then
+    vim.notify(string.format('Could not found [%s] rule', rule), vim.log.levels.WARN)
+    return
+  end
+
+  require('mago.popup').show(vim.split(output, '\n'))
+end
+
+return M

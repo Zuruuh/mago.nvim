@@ -107,8 +107,8 @@ M.setup = function()
   })
 
   vim.lsp.commands['mago.explain_rule'] = function(command)
-    local rule_code = command.arguments[1]
-    require('mago.linter').show_rule_explanation(rule_code)
+    local rule = command.arguments[1]
+    require('mago.server.rules').popup_explain(rule)
   end
 
   vim.lsp.commands['mago.fix_all'] = function(command)

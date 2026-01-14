@@ -11,11 +11,12 @@ function M.check(filepath)
   return decoded.issues
 end
 
-function M.fix(uri)
+function M.explain(rule)
   local executable = require 'mago.executable'
-  local filepath = require('mago.support').path_from_uri(uri)
 
-  local output = executable.run { 'lint', '--fix', '--format-after-fix', filepath }
+  local output = executable.run { 'lint', '--explain', rule }
+
+  return output
 end
 
 return M
