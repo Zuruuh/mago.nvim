@@ -4,7 +4,7 @@ function M.popup_explain(rule)
   local output = require('mago-nvim.run.lint').explain(rule)
 
   if output == nil then
-    vim.notify(string.format('[mago.nvim] Could not found [%s] rule', rule), vim.log.levels.WARN)
+    -- vim.notify(string.format('[mago.nvim] Could not found [%s] rule', rule), vim.log.levels.WARN)
     return
   end
 
