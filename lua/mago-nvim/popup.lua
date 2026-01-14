@@ -1,5 +1,4 @@
 local M = {}
-
 function M.show(lines)
   local width = vim.o.columns
   local height = vim.o.lines
@@ -21,11 +20,25 @@ function M.show(lines)
     col = col,
     style = 'minimal',
     border = 'rounded',
+    focusable = true,
+    noautocmd = true,
   }
   local win = vim.api.nvim_open_win(buf, true, opts)
   vim.wo[win].winblend = 0
+
+  -- Close on q or Esc
   vim.api.nvim_buf_set_keymap(buf, 'n', 'q', ':close<CR>', { noremap = true, silent = true })
   vim.api.nvim_buf_set_keymap(buf, 'n', '<Esc>', ':close<CR>', { noremap = true, silent = true })
-end
 
+  -- Prevent leaving the window
+  vim.api.nvim_create_autocmd('WinLeave', {
+    buffer = buf,
+    once = true,
+    callback = function()
+      vim.schedule(function()
+        if vim.api.nvim_win_is_valid(win) then vim.api.nvim_set_current_win(win) end
+      end)
+    end,
+  })
+end
 return M

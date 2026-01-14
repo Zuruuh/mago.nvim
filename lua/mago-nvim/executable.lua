@@ -28,7 +28,15 @@ function M.run(cmd, opts)
 
   local result = vim.system(cmd, opts):wait()
 
-  if result.code == 0 and result.stdout then return result.stdout end
+  if result.code == 0 then
+    if not (result.stderr == '') then
+      local err = vim.fn.trim(result.stderr)
+      local level = err:match '^(%S+)'
+      vim.notify(err, vim.log.levels[level])
+    end
+
+    return result.stdout
+  end
 
   vim.notify(string.format('[mago.nvim] Failed to run command: ' .. cmd[2], vim.log.levels.ERROR))
   vim.log(result.stderr, vim.log.levels.ERROR, { title = 'mago.nvim' })

@@ -8,7 +8,7 @@ function M.popup_explain(rule)
     return
   end
 
-  require('mago-nvim.popup').show(vim.split(output, '\n'))
+  require('mago-nvim.popup').show(vim.split('  ' .. vim.fn.trim(output), '\n'))
 end
 
 return M
