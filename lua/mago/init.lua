@@ -7,8 +7,6 @@ function M.setup()
     return
   end
 
-  vim.notify('[mago.nvim] Mago executable found', vim.log.levels.ERROR)
-
   require('mago.server').setup()
   -- require 'mago.commands'
 end
