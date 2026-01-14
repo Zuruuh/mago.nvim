@@ -113,13 +113,13 @@ M.setup = function()
 
   vim.lsp.commands['mago.fix_all'] = function(command)
     local bufnr = command.arguments[1]
-    require('mago.linter').fix_all(bufnr)
+    require('mago.server.fixer').fix(bufnr)
   end
 
   vim.lsp.commands['mago.fix_rule'] = function(command)
     local bufnr = command.arguments[1]
-    local rule_code = command.arguments[2]
-    require('mago.linter').fix_rule(bufnr, rule_code)
+    local rule = command.arguments[2]
+    require('mago.server.fixer').fix(bufnr, rule)
   end
 end
 

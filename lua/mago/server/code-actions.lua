@@ -37,7 +37,13 @@ function M.retrieve_from_buffer(bufnr)
   local current_line_issues = vim.tbl_filter(function(l) return l.line == cursor_line end, issues)
   local other_issues = vim.tbl_filter(function(l) return l.line ~= cursor_line end, issues)
 
-  for _, item in ipairs(issues_to_list(current_line_issues)) do
+  local current_line_list = issues_to_list(current_line_issues)
+  local other_line_list = vim.tbl_filter(
+    function(x) return vim.tbl_contains(current_line_list, x) == false end,
+    issues_to_list(other_issues)
+  )
+
+  for _, item in ipairs(current_line_list) do
     table.insert(actions, {
       title = string.format('Explain [%s] rule', item),
       kind = 'quickfix',
@@ -58,7 +64,7 @@ function M.retrieve_from_buffer(bufnr)
     })
   end
 
-  for _, item in ipairs(issues_to_list(other_issues)) do
+  for _, item in ipairs(other_line_list) do
     table.insert(actions, {
       title = string.format('Fix [%s] issues', item),
       kind = 'quickfix',

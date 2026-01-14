@@ -1,8 +1,5 @@
 <?php
 
-$x = array();
+declare(strict_types=1);
 
-class a____asdsd
-{
-    //
-}
+$x = array();
