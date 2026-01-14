@@ -21,8 +21,6 @@ function M.init()
 end
 
 function M.run(parameters)
-  if M.mago_path == nil then M.init() end
-
   table.insert(parameters, 1, M.mago_path)
   local result = vim.system(parameters, { text = true }):wait()
 

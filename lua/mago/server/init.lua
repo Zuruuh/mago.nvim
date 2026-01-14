@@ -97,25 +97,38 @@ local function create_server(dispatchers)
   return server
 end
 
+local function start_mago(bufnr)
+  vim.schedule(
+    function()
+      vim.lsp.start({
+        name = 'mago.nvim',
+        cmd = create_server,
+        root_dir = vim.fn.getcwd(),
+      }, {
+        bufnr = bufnr,
+      })
+    end
+  )
+end
+
 local M = {}
 
 M.setup = function()
-  local client = vim.lsp.start {
-    name = 'mago.nvim',
-    cmd = create_server,
-    root_dir = vim.fn.getcwd(),
-  }
-
-  if not client then
-    vim.notify('[mago.nvim] Failed to start LSP client', vim.log.levels.ERROR)
-    return
-  end
+  if vim.bo.filetype == 'php' then start_mago(0) end
 
   vim.api.nvim_create_autocmd('FileType', {
     pattern = 'php',
-    callback = function() vim.lsp.buf_attach_client(0, client) end,
-    desc = 'Attach mago.nvim LSP client to PHP buffers',
+    callback = function(args)
+      start_mago(args.buf)
+      --
+    end,
+    desc = 'Start/attach mago.nvim LSP for PHP',
   })
+
+  vim.lsp.commands['mago.explain_rule'] = function(command)
+    local rule_code = command.arguments[1]
+    require('mago.linter').show_rule_explanation(rule_code)
+  end
 
   vim.lsp.commands['mago.fix_all'] = function(command)
     local bufnr = command.arguments[1]
@@ -126,11 +139,6 @@ M.setup = function()
     local bufnr = command.arguments[1]
     local rule_code = command.arguments[2]
     require('mago.linter').fix_rule(bufnr, rule_code)
-  end
-
-  vim.lsp.commands['mago.explain_rule'] = function(command)
-    local rule_code = command.arguments[1]
-    require('mago.linter').show_rule_explanation(rule_code)
   end
 end
 
