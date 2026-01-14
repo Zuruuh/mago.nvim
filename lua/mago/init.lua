@@ -8,7 +8,7 @@ function M.setup()
   end
 
   require('mago.server').setup()
-  -- require 'mago.commands'
+  require 'mago.commands'
 end
 
 return M

@@ -31,24 +31,15 @@ vim.api.nvim_create_user_command('MagoFixAll', function() require('mago.linter')
 })
 
 vim.api.nvim_create_user_command('MagoExplainRule', function(opts)
-  local linter = require 'mago.linter'
-  local rule_code = opts.args
+  local rule = vim.fn.trim(opts.args)
 
-  if rule_code == '' then
-    local bufnr = vim.api.nvim_get_current_buf()
-    rule_code = linter.get_rule_at_cursor(bufnr)
-
-    if not rule_code then
-      vim.notify(
-        '[mago.nvim] No diagnostic found at cursor. Specify rule by parameter (:MagoExplainRule <rule>) or place cursor on a diagnostic',
-        vim.log.levels.INFO
-      )
-      return
-    end
+  if rule == '' then
+    vim.notify('[mago.nvim] Specify rule by parameter (:MagoExplainRule <rule>)', vim.log.levels.INFO)
+    return
   end
 
-  linter.show_rule_explanation(rule_code)
+  require('mago.server.rules').popup_explain(rule)
 end, {
   nargs = '?',
-  desc = 'Explain a Mago linter rule (uses cursor diagnostic if no arg provided)',
+  desc = 'Explain a Mago linter rule',
 })
