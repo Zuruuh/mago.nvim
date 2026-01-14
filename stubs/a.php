@@ -1,3 +1,8 @@
 <?php
 
-$x = array(c);
+$x = array();
+
+class a____asdsd
+{
+    //
+}

@@ -13,10 +13,7 @@ end
 
 function M.explain(rule)
   local executable = require 'mago.executable'
-
-  local output = executable.run { 'lint', '--explain', rule }
-
-  return output
+  return executable.run { 'lint', '--explain', rule }
 end
 
 return M

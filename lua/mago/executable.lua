@@ -20,13 +20,18 @@ function M.init()
   return false
 end
 
-function M.run(parameters)
-  table.insert(parameters, 1, M.mago_path)
-  local result = vim.system(parameters, { text = true }):wait()
+function M.run(cmd, opts)
+  if opts == nil then opts = {} end
+
+  table.insert(cmd, 1, M.mago_path)
+  opts.text = true
+
+  local result = vim.system(cmd, opts):wait()
 
   if result.code == 0 and result.stdout then return result.stdout end
 
-  vim.notify(string.format('[mago.nvim] Failed to run command: ' .. parameters[2], vim.log.levels.ERROR))
+  vim.notify(string.format('[mago.nvim] Failed to run command: ' .. cmd[2], vim.log.levels.ERROR))
+
   return nil
 end
 

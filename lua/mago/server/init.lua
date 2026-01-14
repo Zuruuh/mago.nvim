@@ -1,6 +1,6 @@
 local function create_server(dispatchers)
   local diagnostics = require 'mago.server.diagnostics'
-  local code_actions = require 'mago.run.code-actions'
+  local code_actions = require 'mago.server.code-actions'
 
   local server = {}
   local closing = false
@@ -18,7 +18,7 @@ local function create_server(dispatchers)
       end,
 
       ['textDocument/formatting'] = function(params, callback)
-        -- formatter.format_buffer(vim.uri_to_bufnr(params.textDocument.uri))
+        require('mago.server.format').format_uri(params.textDocument.uri)
         callback(nil, {})
       end,
 
