@@ -20,6 +20,16 @@ PHP toolchain written in Rust.
 
 ## Installation
 
+### Using Neovim 0.12 vim.pack
+
+```lua
+vim.pack.add {
+  { src = 'https://github.com/calvinludwig/mago.nvim' }
+}
+
+require('mago-nvim').setup()
+```
+
 ### Using [lazy.nvim](https://github.com/folke/lazy.nvim)
 
 ```lua
