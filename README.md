@@ -24,7 +24,7 @@ PHP toolchain written in Rust.
 
 ```lua
 vim.pack.add {
-  { src = 'https://github.com/calvinludwig/mago.nvim' }
+  { src = 'https://github.com/calvinludwig/mago.nvim' },
 }
 
 require('mago-nvim').setup()
