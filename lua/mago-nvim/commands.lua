@@ -16,7 +16,7 @@ vim.api.nvim_create_user_command('MagoExplainRule', function(opts)
   local rule = vim.fn.trim(opts.args)
 
   if rule == '' then
-    vim.notify('[mago.nvim] Specify rule by parameter (:MagoExplainRule <rule>)', vim.log.levels.INFO)
+    -- vim.notify('[mago.nvim] Specify rule by parameter (:MagoExplainRule <rule>)', vim.log.levels.INFO)
     return
   end
 

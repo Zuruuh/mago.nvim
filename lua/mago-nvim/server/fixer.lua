@@ -7,7 +7,7 @@ function M.fix(bufnr, rule)
   local is_modified = vim.bo[bufnr].modified
 
   if is_modified or not filepath then
-    vim.notify '[mago.nvim] Save the file before fixing the issues'
+    -- vim.notify '[mago.nvim] Save the file before fixing the issues'
     return
   end
 
